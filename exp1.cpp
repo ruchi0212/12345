@@ -1,164 +1,127 @@
 #include <iostream>
-#include<string>
+#include <string.h>
 using namespace std;
-class node
+struct node
 {
-public:
-char data;
-node *left;
-node *right;
+    char data;
+    node *left;
+    node *right;
 };
-class stack
+class tree
 {
+    char prefix[20];
 public:
-int top;
-node *a[20];
-stack()
-{
-top = -1;
-}
-void push(node *temp)
-{
-if(!isfull())
-{
-a[++top]= temp;
-}
-else
-{
-cout<<"Stack is full...!";
-}
-}
-node *pop()
-{
-if(!isempty())
-{
-return(a[top--]);
-}
-else
-{
-cout<<"Stack is empty...!";
-}
-}
-int isfull()
-{
-if(top==19)
-{
-return (1);
-}
-else
-{
-return (0);
-}
-}
-int isempty()
-{
-if(top== -1)
-{
-return (1);
-}
-else
-{
-return (0);
-}
-}
+    node *top;
+    void expression(char[]);
+    void display(node *);
+    void non_rec_postorder(node *);
+    void del(node *);
 };
-class Exp_Tree
+class stack1
 {
+    node *data[30];
+    int top;
 public:
-node *root;
-Exp_Tree()
-{
-root= NULL;
-}
-void create_exp_tree();
-void infix(node *temp);
-void prefix(node *temp);
-void postfix(node *temp);
-void del(node *temp);
+    stack1()
+    {
+        top = -1;
+    }
+    int empty()
+    {
+        if (top == -1)
+            return 1;
+        return 0;
+    }
+    void push(node *p)
+    {
+        data[++top] = p;
+    }
+    node *pop()
+    {
+        return (data[top--]);
+    }
 };
-void Exp_Tree::create_exp_tree()
+void tree::expression(char prefix[])
 {
-char ch;
-node *new_node,*temp;
-string str;
-int i;
-stack s;
-cout<<"\nEnter a Prefix expression:";
-cin>>str;
-for(i=(str.length()-1);i>=0;i--)
-{
-ch=str[i];
-new_node = new node();
-new_node->data = ch;
-new_node->left=NULL;
-new_node->right=NULL;
-if((ch>='A' && ch<='Z') || (ch>='a' && ch<='z'))
-{
-s.push(new_node);
+    char c;
+    stack1 s;
+    node *t1, *t2;
+    int len, i;
+    len = strlen(prefix);
+    for (i = len - 1; i >= 0; i--)
+    {
+        top = new node;
+        top->left = NULL;
+        top->right = NULL;
+        if (isalpha(prefix[i]))
+        {
+            top->data = prefix[i];
+            s.push(top);
+        }
+        else if (prefix[i] == '+' || prefix[i] == '*' || prefix[i] == '-' || prefix[i] == '/')
+        {
+            t2 = s.pop();
+            t1 = s.pop();
+            top->data = prefix[i];
+            top->left = t2;
+            top->right = t1;
+            s.push(top);
+        }
+    }
+    top = s.pop();
 }
-else
+void tree::display(node *root)
 {
-temp=s.pop();
-new_node->left=temp;
-temp=s.pop();
-new_node->right=temp;
-s.push(new_node);
+    if (root != NULL)
+    {
+        cout << root->data;
+        display(root->left);
+        display(root->right);
+    }
 }
-}
-root = s.pop();
-}
-void Exp_Tree::prefix(node *temp)
+void tree::non_rec_postorder(node *top)
 {
-if(temp != NULL)
-{
-cout<<" "<<temp->data;
-prefix(temp->left);
-prefix(temp->right);
+    stack1 s1, s2; /*stack s1 is being used for flag . A NULL data implies that the right subtree has not been visited */
+    node *T = top;
+    cout << "\n";
+    s1.push(T);
+    while (!s1.empty())
+    {
+        T = s1.pop();
+        s2.push(T);
+        if (T->left != NULL)
+            s1.push(T->left);
+        if (T->right != NULL)
+            s1.push(T->right);
+    }
+    while (!s2.empty())
+    {
+        top = s2.pop();
+        cout << top->data;
+    }
 }
-}
-void Exp_Tree::infix(node *temp)
+void tree::del(node *node)
 {
-if(temp!=NULL)
-{
-infix(temp->left);
-cout<<""<<temp->data;
-infix(temp->right);
-}
-}
-void Exp_Tree::postfix(node *temp)
-{
-if(temp!=NULL)
-{
-postfix(temp->left);
-postfix(temp->right);
-cout<<""<<temp->data;
-}
-}
-void Exp_Tree::del(node *temp)
-{
-if(temp==NULL)
-return;
-{
-del(temp->left);
-del(temp->right);
-cout<<"\n deleting node "<<temp->data;
-delete(temp);
-}
+    if (node == NULL)
+        return;
+    /* first delete both subtrees */
+    del(node->left);
+    del(node->right);
+    /* then delete the node */
+    cout <<endl<<"Deleting node : " << node->data<<endl;
+    free(node);
 }
 int main()
 {
-Exp_Tree E;
-E.create_exp_tree();
-cout<<"\nPrefix expression is: ";
-E.prefix(E.root);
-cout<<endl;
-cout<<"\n Infix expression is :";
-E.infix(E.root);
-cout<<endl;
-cout<<"\n Postfix expression is :";
-E.postfix(E.root);
-cout<<endl;
-cout<<"\n Deleted expression is :";
-E.del(E.root);
-cout<<endl;
+    char expr[20];
+    tree t;
+    cout <<"Enter prefix Expression : ";
+    cin >> expr;
+    cout << expr;
+    t.expression(expr);
+    //t.display(t.top);
+    //cout<<endl;
+    t.non_rec_postorder(t.top);
+    t.del(t.top);
+    // t.display(t.top);
 }
